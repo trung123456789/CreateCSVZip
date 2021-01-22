@@ -3,11 +3,12 @@ package main
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/cheggaaa/pb/v3"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/cheggaaa/pb/v3"
 )
 
 func main() {
@@ -59,10 +60,26 @@ func main() {
 
 		//bar := pb.StartNew(100000)
 		for i := startLine; i <= endLine; i++ {
-			temp := strings.ReplaceAll(sampleData, "~", strconv.Itoa(i))
-			file.WriteString(temp + "\n")
+			splitStr := strings.Split(sampleData, ",")
+
+			var rs []string
+			for j := 0; j < len(splitStr); j++ {
+				strOrg := splitStr[j]
+				if strings.Contains(strOrg, "~") {
+					numZeroDel := len(strconv.Itoa(i))
+					if (len(strconv.Itoa(i)) > strings.Count(strOrg, "0")) {
+						numZeroDel = strings.Count(strOrg, "0")
+					}
+					strDel := strings.Repeat("0", numZeroDel)
+					temp := strings.ReplaceAll(strOrg, "~", strconv.Itoa(i))
+					strOrg = strings.Replace(temp, strDel, "", 1)
+				}
+				rs = append(rs, strOrg)
+			}
+			file.WriteString(strings.Join(rs, ",") + "\n")
 			bar.Increment()
 		}
+
 		bar.Finish()
 		outFile, err := os.Create(zipName)
 		if err != nil {
