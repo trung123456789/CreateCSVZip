@@ -12,35 +12,30 @@ import (
 )
 
 func main() {
-	var numOfSplit, Sum int
+	var numOfSplit, sum int
 	var title string
 	var sampleData string
 	var fileName, ext string
-	fmt.Println("Input file name: ")
-	fmt.Scanf("%s\n", &fileName)
-	fmt.Println("Input ext: ")
-	fmt.Scanf("%s\n", &ext)
-	fmt.Println("Input title: ")
-	fmt.Scanf("%s\n", &title)
-	fmt.Println("Input sample data: ")
-	fmt.Scanf("%s\n", &sampleData)
 
-	fmt.Println("Input num of split: ")
-	fmt.Scanf("%d\n", &numOfSplit)
-	fmt.Println("Input sum line: ")
-	fmt.Scanf("%d\n", &Sum)
-	if Sum%numOfSplit != 0 {
-		fmt.Println("Sum line must be divide by number of split")
+	fileName = TypeInput("Input file name: ")
+	ext = TypeInput("Input ext: ")
+	title = TypeInput("Input title: ")
+	sampleData = TypeInput("Input sample data: ")
+	numOfSplit = TypeInputNumber("Input num of file: ")
+	sum = TypeInputNumber("Input sum line: ")
+
+	if sum%numOfSplit != 0 {
+		fmt.Println("sum line must be divide by number of split")
 		return
 	}
 	startLine := 1
-	endLine := Sum / numOfSplit
+	endLine := sum / numOfSplit
 
 	for idx := 0; idx < numOfSplit; idx++ {
 		newFolder := fileName + "_" + strconv.Itoa(startLine) + "_" + strconv.Itoa(endLine)
 		lastFolder := newFolder + "/" + newFolder
 		os.MkdirAll(lastFolder, os.ModePerm)
-		tempFileName := lastFolder + "/" + "SampleData" + ext
+		tempFileName := lastFolder + "/" + fileName + "." + ext
 
 		file, err := os.Create(tempFileName)
 		file.WriteString(title + "\n")
@@ -52,7 +47,7 @@ func main() {
 		tmpl := `{{ yellow "%s:" }} {{ bar . "[" "=" (cycle . "↖" "↗" "↘" "↙" ) "-" "]"}} {{speed . | rndcolor }} {{percent .}}`
 		ltempl := fmt.Sprintf(tmpl, zipName)
 		// start bar based on our template
-		rangBar := Sum / numOfSplit
+		rangBar := sum / numOfSplit
 		bar := pb.ProgressBarTemplate(ltempl).Start64(int64(rangBar))
 		// set values for string elements
 		bar.Set("my_green_string", "green").
@@ -94,8 +89,42 @@ func main() {
 			os.RemoveAll(d.Name())
 		}
 		startLine = endLine + 1
-		endLine += Sum / numOfSplit
+		endLine += sum / numOfSplit
 	}
+}
+
+func TypeInput(log string) string {
+	var str string
+    fmt.Println(log)
+    for {
+		fmt.Scanf("%s\n", &str)
+        if str == "" {
+            fmt.Println("Enter a string data:")
+        } else {
+            return str
+        }
+    }
+}
+
+func TypeInputNumber(log string) int {
+	var str string
+    var num int = 0
+    fmt.Println(log)
+    for {
+        fmt.Scanf("%s\n", &str)
+		if str == "" {
+            fmt.Println("Enter a number data:")
+			continue
+        }
+        num, err := strconv.Atoi(str)
+		fmt.Println(err)
+        if err != nil {
+            fmt.Println("Enter a valid number:")
+        } else {
+            return num
+        }
+    }
+	return num
 }
 
 func ZipWriter(baseFolder string, outFile *os.File) {
@@ -103,7 +132,7 @@ func ZipWriter(baseFolder string, outFile *os.File) {
 	w := zip.NewWriter(outFile)
 
 	//// Add some files to the archive.
-	addFiles(w, baseFolder, "")
+	AddFiles(w, baseFolder, "")
 
 	//// Make sure to check the error on Close.
 	err := w.Close()
@@ -112,7 +141,7 @@ func ZipWriter(baseFolder string, outFile *os.File) {
 	}
 }
 
-func addFiles(w *zip.Writer, basePath, baseInZip string) {
+func AddFiles(w *zip.Writer, basePath, baseInZip string) {
 	// Open the Directory
 	files, err := ioutil.ReadDir(basePath)
 	if err != nil {
@@ -136,7 +165,7 @@ func addFiles(w *zip.Writer, basePath, baseInZip string) {
 		} else if file.IsDir() {
 			// Recurse
 			newBase := basePath + file.Name() + "/"
-			addFiles(w, newBase, baseInZip+file.Name()+"/")
+			AddFiles(w, newBase, baseInZip+file.Name()+"/")
 		}
 	}
 }
